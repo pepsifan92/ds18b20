@@ -9,8 +9,8 @@
     http://www.eclipse.org/legal/epl-v10.html
 
 -->
-<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" activate="activate" modified="modified" deactivate="deactivate" name="org.openhab.binding.ds18b20control.binding" immediate="true" configuration-pid="org.openhab.ds18b20control">
-	<implementation class="org.openhab.binding.ds18b20control.internal.ds18b20controlBinding" />
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" activate="activate" modified="modified" deactivate="deactivate" name="org.openhab.binding.ds18b20.binding" immediate="true" configuration-pid="org.openhab.ds18b20">
+	<implementation class="org.openhab.binding.ds18b20.internal.ds18b20Binding" />
 
 	<service>
 		<provide interface="org.osgi.service.event.EventHandler" />
@@ -21,7 +21,7 @@
 		interface="org.openhab.core.events.EventPublisher" name="EventPublisher"
 		policy="dynamic" unbind="unsetEventPublisher" />
 	<reference bind="addBindingProvider" cardinality="1..n"
-		interface="org.openhab.binding.ds18b20control.ds18b20controlBindingProvider" name="ds18b20controlBindingProvider"
+		interface="org.openhab.binding.ds18b20.ds18b20BindingProvider" name="ds18b20BindingProvider"
 		policy="dynamic" unbind="removeBindingProvider" />
 	
 </scr:component>

@@ -6,14 +6,15 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.openhab.binding.ds18b20control.internal;
+package org.openhab.binding.ds18b20.internal;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
+import java.util.Scanner;
 import org.apache.commons.lang.StringUtils;
-import org.openhab.binding.ds18b20control.ds18b20controlBindingProvider;
+import org.openhab.binding.ds18b20.ds18b20BindingProvider;
 import org.openhab.core.binding.AbstractActiveBinding;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.types.Command;
@@ -22,8 +23,6 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pi4j.io.i2c.I2CDevice;
-
 /**
  * Implement this class if you are going create an actively polling service
  * like querying a Website/Device.
@@ -31,10 +30,10 @@ import com.pi4j.io.i2c.I2CDevice;
  * @author MichaelP
  * @since 1.0
  */
-public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlBindingProvider> {
+public class ds18b20Binding extends AbstractActiveBinding<ds18b20BindingProvider> {
 
 	private static final Logger logger = 
-		LoggerFactory.getLogger(ds18b20controlBinding.class);	
+		LoggerFactory.getLogger(ds18b20Binding.class);	
 		
 	/**
 	 * The BundleContext. This is only valid when the bundle is ACTIVE. It is set in the activate()
@@ -42,16 +41,16 @@ public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlB
 	 * was called.
 	 */
 	private BundleContext bundleContext;
-	private TreeMap<AddressAndPin, Integer> PinStateMap = new TreeMap<>();
+//	private TreeMap<String, Integer> TemperatureMap = new TreeMap<>();
 	
 	/** 
-	 * the refresh interval which is used to poll values from the ds18b20control
+	 * the refresh interval which is used to poll values from the ds18b20
 	 * server (optional, defaults to 5000ms)
 	 */
 	private long refreshInterval = 5000;
 	
-	public ds18b20controlBinding() {
-		logger.debug("ds18b20controlBinding binding started");
+	public ds18b20Binding() {
+		logger.debug("ds18b20Binding binding started");
 	}
 			
 	/**
@@ -114,7 +113,7 @@ public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlB
 	 */
 	@Override
 	protected String getName() {
-		return "ds18b20control Refresh Service";
+		return "ds18b20 Refresh Service";
 	}
 	
 
@@ -124,7 +123,8 @@ public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlB
 	@Override
 	protected void execute() {
 		// the frequently executed code (polling) goes here ...		
-		readAllInputPins();
+//		logger.debug("ds18b20: ================================================= ");
+		readAllTemperatures();
 	}
 		
 	/**
@@ -135,7 +135,7 @@ public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlB
 		// the code being executed when a command was sent on the openHAB
 		// event bus goes here. This method is only called if one of the
 		// BindingProviders provide a binding for the given 'itemName'.
-		logger.debug("ds18b20control: internalReceiveCommand({},{}) is called!", itemName, command);
+//		logger.debug("ds18b20: internalReceiveCommand({},{}) is called!", itemName, command);
 		
 		//There is no output, just reading. Reading happens automatically through execute... 
 	}
@@ -149,46 +149,38 @@ public class ds18b20controlBinding extends AbstractActiveBinding<ds18b20controlB
 		// event bus goes here. This method is only called if one of the 
 		// BindingProviders provide a binding for the given 'itemName'.
 		logger.debug("internalReceiveUpdate({},{}) is called!", itemName, newState);		
-	}	
+	}		
 	
-	private void readAllInputPins(){
-		//logger.debug("<<<<<<<<<<<<<<<<<<<<<< READ ALL INPUT PINS is called! >>>>>>>>>>>>>>>>>>>>>>>>>");
-		for (ds18b20controlBindingProvider provider : providers) {			
-			for(Entry<Integer, I2CDevice> entry : provider.getds18b20Map().entrySet()){ //Every Board				
-				int key = entry.getKey();
-				I2CDevice prov = entry.getValue();	
-				int TempPinReadVal = 0;
-				for(int pin = 0; pin <= 4; pin++){
-					try {
-						AddressAndPin addressAndPin = new AddressAndPin(key, pin);
-						if(PinStateMap.containsKey(addressAndPin)){						
-						
-							prov.read(pin); //Read fist time to get the second read, because the first value is old...
-							TempPinReadVal = prov.read(pin);
-							if (PinStateMap.get(addressAndPin).intValue() != TempPinReadVal) {
-								//only if value has changed
-								eventPublisher.postUpdate(getItemName(key, pin),DecimalType.valueOf(String.valueOf(TempPinReadVal)));
-							}
-							PinStateMap.replace(addressAndPin, TempPinReadVal);
-						} else {						 
-							PinStateMap.put(new AddressAndPin(key, pin), TempPinReadVal);
-						}
-					} catch (Exception e) {
-						//Exception occurs, if Pin is not given in ItemConfig because getItemName can't find the Item ... So simply ignore it.						
-					}					
-				}				
+	public void readAllTemperatures() {
+		for (ds18b20BindingProvider provider : providers) {
+			for (String itemName : provider.getItemNames()) {
+				try {
+					Float tempRaw = (float) readTemperature(provider.getTemperature(itemName).getDeviceId()).getTemperature();
+					Float temperature = tempRaw/1000;
+					eventPublisher.postUpdate(itemName, DecimalType.valueOf(temperature.toString()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 			}
 		}		
 	}
 	
-	private String getItemName(int address, int pin){
-		for (ds18b20controlBindingProvider provider : providers) {
-			for (String itemName : provider.getItemNames()) {
-				if(provider.getAddress(itemName) == address && provider.getPinNumber(itemName) == pin){
-					return itemName;
-				}
-			}		
-		}
-		return "ItemNotFound in getItemName in ds18b20control";
-	}
+	public Temperature readTemperature(String deviceId) throws IOException {
+        String content = new String(Files.readAllBytes(Paths.get("/sys/bus/w1/devices/" + deviceId + "/w1_slave")));
+        if (content != null) {
+            Scanner sc = new Scanner(content);
+            for (int i = 0; i <= 20; i++) {
+                sc.next();
+            }
+            String tempWithTEquals = sc.next();
+            sc.close();
+            String temp = tempWithTEquals.substring(2, tempWithTEquals.length());
+            Temperature temperature = new Temperature(deviceId);
+            temperature.setTemperature(Integer.parseInt(temp));
+            temperature.setTimeStamp(System.currentTimeMillis());
+            return temperature;
+        }
+		return null;
+    }	
 }

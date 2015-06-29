@@ -1,6 +1,8 @@
-package home.control.model;
+package org.openhab.binding.ds18b20.internal;
 
-public class Temperature {
+import org.openhab.core.binding.BindingConfig;
+
+public class Temperature implements BindingConfig{
 
     private final Event event = Event.TEMP;
     private String deviceId;

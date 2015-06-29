@@ -9,17 +9,17 @@
 	</parent>
 
 	<properties>
-		<bundle.symbolicName>org.openhab.binding.ds18b20control</bundle.symbolicName>
-		<bundle.namespace>org.openhab.binding.ds18b20control</bundle.namespace>
-		<deb.name>openhab-addon-binding-ds18b20control</deb.name>
-		<deb.description>openhab addon binding ds18b20control</deb.description>
+		<bundle.symbolicName>org.openhab.binding.ds18b20</bundle.symbolicName>
+		<bundle.namespace>org.openhab.binding.ds18b20</bundle.namespace>
+		<deb.name>openhab-addon-binding-ds18b20</deb.name>
+		<deb.description>openhab addon binding ds18b20</deb.description>
 	</properties>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.openhab.binding</groupId>
-	<artifactId>org.openhab.binding.ds18b20control</artifactId>
+	<artifactId>org.openhab.binding.ds18b20</artifactId>
 
-	<name>openHAB ds18b20control Binding</name>
+	<name>openHAB ds18b20 Binding</name>
 
 	<packaging>eclipse-plugin</packaging>
 

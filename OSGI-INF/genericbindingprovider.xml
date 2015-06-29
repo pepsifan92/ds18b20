@@ -9,12 +9,12 @@
     http://www.eclipse.org/legal/epl-v10.html
 
 -->
-<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.openhab.binding.ds18b20control.genericbindingprovider">
-   <implementation class="org.openhab.binding.ds18b20control.internal.ds18b20controlGenericBindingProvider"/>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.openhab.binding.ds18b20.genericbindingprovider">
+   <implementation class="org.openhab.binding.ds18b20.internal.ds18b20GenericBindingProvider"/>
    
    <service>
       <provide interface="org.openhab.model.item.binding.BindingConfigReader"/>
-      <provide interface="org.openhab.binding.ds18b20control.ds18b20controlBindingProvider"/>
+      <provide interface="org.openhab.binding.ds18b20.ds18b20BindingProvider"/>
    </service>
    
 </scr:component>
